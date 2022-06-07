@@ -3,6 +3,7 @@ using SelectPdf;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -24,8 +25,8 @@ namespace WebApplication.Controllers
             //    return File(by, "dd748f0d-aba0-4055-a662-f6cb4bf2c17d.png");
             //}
 
-            string html = System.IO.File.ReadAllText(@"D:\work\repos\template.html");
-            var file = ConvertHTMLToPDF(html);
+            string html = System.IO.File.ReadAllText(@"D:\work\repos\templatea8.html");
+            var file = ConvertHTMLToPDF(html, PdfPageSize.A7, PdfPageOrientation.Landscape, 10,10,0,10);
             return File(file, "test.pdf");
         }
 
@@ -56,13 +57,12 @@ namespace WebApplication.Controllers
         /// <param name="pageWidth">793px tương đương với A4</param>
         /// <param name="pageHeigth"></param>
         /// <returns></returns>
-        public Byte[] ConvertHTMLToPDF(string html, PdfPageSize pageSizeType = PdfPageSize.A4, PdfPageOrientation pdfPageOrientation = PdfPageOrientation.Portrait, int marginTop = 0, int marginRight = 0, int marginBot = 0, int marginLeft = 0, int pageWidth = 793, int pageHeigth = 0, bool isOnePage = false)
+        public Byte[] ConvertHTMLToPDF(string html, PdfPageSize pageSizeType = PdfPageSize.A4, PdfPageOrientation pdfPageOrientation = PdfPageOrientation.Portrait, int marginTop = 20, int marginRight = 20, int marginBot = 20, int marginLeft = 20, int pageWidth = 793, int pageHeigth = 0, bool isOnePage = false)
         {
             try
             {
                 var converter = new HtmlToPdf();
-                converter.Options.PdfPageSize = PdfPageSize.Custom;
-                converter.Options.PdfPageCustomSize = new SizeF(400, 200);
+                converter.Options.PdfPageSize = pageSizeType;
                 converter.Options.PdfPageOrientation = pdfPageOrientation;
 
                 converter.Options.WebPageWidth = pageWidth;
@@ -76,9 +76,10 @@ namespace WebApplication.Controllers
                 converter.Options.MarginRight = marginRight;
                 converter.Options.MarginBottom = marginBot;
                 converter.Options.MarginLeft = marginLeft;
-                converter.Footer.Height = 20;
 
                 var pdf = converter.ConvertHtmlString(html);
+
+                //Nếu chỉ in 1 trang thì loại bỏ các trang còn lại
                 if (pdf.Pages.Count > 1 && isOnePage)
                 {
                     for (int i = 1; i < pdf.Pages.Count; i++)
@@ -95,6 +96,25 @@ namespace WebApplication.Controllers
                 throw;
             }
         }
-        
+
+        public Byte[] ConvertHTMLToImage(string html)
+        {
+            try
+            {
+                var converter = new HtmlToImage();
+                var img = converter.ConvertHtmlString(html);
+                using (var ms = new MemoryStream())
+                {
+                    img.Save(ms, img.RawFormat);
+                    return ms.ToArray();
+                }
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
     }
 }
